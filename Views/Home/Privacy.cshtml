@@ -1,0 +1,31 @@
+@{ ViewData["Title"] = "Privacy notice"; }
+<div class="container py-4" style="max-width: 820px">
+    <div class="card p-4">
+        <h1 class="h3 mb-3">Privacy notice</h1>
+        <p>HealthTrack stores personal and health information so that you and the professionals you work with can track
+            your progress. This notice explains what we collect and how we protect it.</p>
+        <h2 class="h5 mt-4">What we store</h2>
+        <ul>
+            <li>Account details: name, e-mail, phone number, date of birth, gender and height.</li>
+            <li>Health data you enter: measurements (weight, BMI, body fat, heart rate, blood pressure), workouts and meals.</li>
+            <li>Appointments, plans and feedback exchanged with trainers and health professionals.</li>
+            <li>A security log of sign-ins and important actions.</li>
+        </ul>
+        <h2 class="h5 mt-4">Who can see it</h2>
+        <ul>
+            <li>You can see all of your own data.</li>
+            <li>Trainers and professionals can only see clients assigned to them or who have booked with them.</li>
+            <li>Administrators manage accounts and can see system-wide statistics.</li>
+        </ul>
+        <h2 class="h5 mt-4">How it is protected</h2>
+        <ul>
+            <li>Passwords are never stored - only salted PBKDF2 hashes (ASP.NET Core Identity).</li>
+            <li>Medical free-text notes are encrypted in the database (AES-256 via ASP.NET Core Data Protection).</li>
+            <li>Accounts lock for 15 minutes after 5 failed sign-in attempts.</li>
+            <li>All forms are protected against cross-site request forgery and all input is validated.</li>
+        </ul>
+        <h2 class="h5 mt-4">Your rights</h2>
+        <p class="mb-0">You can view and correct your data at any time, download a full copy from
+            <em>Profile &amp; privacy &rarr; Download my data</em>, and ask an administrator to deactivate your account.</p>
+    </div>
+</div>

@@ -1,0 +1,13 @@
+@model int
+@* Buttons to switch the chart period; keeps other query-string values (e.g. clientId/id). *@
+@{
+    var query = Context.Request.Query;
+    var other = query.Where(q => q.Key != "days").ToDictionary(q => q.Key, q => q.Value.ToString());
+}
+<div class="btn-group btn-group-sm no-print" role="group" aria-label="Period">
+    @foreach (var d in new[] { 7, 30, 90, 180, 365 })
+    {
+        var route = new Dictionary<string, string>(other) { ["days"] = d.ToString() };
+        <a class="btn @(Model == d ? "btn-primary" : "btn-outline-primary")" asp-all-route-data="route">@(d == 365 ? "1 year" : d + " days")</a>
+    }
+</div>

@@ -1,0 +1,20 @@
+@model List<TrainerFeedback>
+@{ ViewData["Title"] = "Feedback"; }
+<div class="page-header"><div><h1>Feedback from your trainers</h1><p class="subtitle">Comments and ratings on your progress.</p></div></div>
+<div class="card"><div class="card-body">
+@if (Model.Count == 0)
+{
+    <div class="empty-state"><i class="bi bi-chat-quote"></i>You have not received any feedback yet.</div>
+}
+@foreach (var f in Model)
+{
+    <div class="timeline-item">
+        <div class="d-flex justify-content-between">
+            <strong>@f.Trainer?.FullName</strong>
+            <small class="text-muted">@f.CreatedAt.ToString("dd MMM yyyy HH:mm")</small>
+        </div>
+        @if (f.Rating.HasValue) { <div class="text-warning small">@(new string('★', f.Rating.Value))@(new string('☆', 5 - f.Rating.Value))</div> }
+        <p class="mb-0">@f.Message</p>
+    </div>
+}
+</div></div>

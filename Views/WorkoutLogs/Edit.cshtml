@@ -1,0 +1,60 @@
+@model WorkoutLog
+@{
+    bool isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "Log workout" : "Edit workout";
+    var plans = (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Plans;
+    var todays = (List<(WorkoutPlan Plan, WorkoutExercise Exercise)>)ViewBag.TodaysExercises;
+}
+<div class="page-header"><div><a asp-action="Index" class="small"><i class="bi bi-arrow-left"></i> Workout log</a><h1>@ViewData["Title"]</h1></div></div>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card"><div class="card-body">
+            <form asp-action="@(isNew ? "Create" : "Edit")" asp-route-id="@(isNew ? null : Model.Id)" method="post" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+                <div class="row g-3">
+                    <div class="col-md-8"><label asp-for="ExerciseName" class="form-label">Exercise</label><input asp-for="ExerciseName" class="form-control" list="exerciseList" /><span asp-validation-for="ExerciseName" class="text-danger small"></span></div>
+                    <div class="col-md-4"><label asp-for="Date" class="form-label"></label><input asp-for="Date" type="date" class="form-control" max="@DateTime.Today.ToString("yyyy-MM-dd")" /><span asp-validation-for="Date" class="text-danger small"></span></div>
+                    <div class="col-md-4"><label asp-for="DurationMinutes" class="form-label">Duration (min)</label><input asp-for="DurationMinutes" class="form-control" /><span asp-validation-for="DurationMinutes" class="text-danger small"></span></div>
+                    <div class="col-md-4"><label asp-for="Intensity" class="form-label"></label><select asp-for="Intensity" asp-items="Html.GetEnumSelectList<Intensity>()" class="form-select"></select></div>
+                    <div class="col-md-4"><label asp-for="CaloriesBurned" class="form-label">Calories burned</label><input asp-for="CaloriesBurned" class="form-control" /><div class="form-text">Leave 0 to estimate automatically.</div><span asp-validation-for="CaloriesBurned" class="text-danger small"></span></div>
+                    <div class="col-12"><label asp-for="WorkoutPlanId" class="form-label">Part of plan</label><select asp-for="WorkoutPlanId" asp-items="plans" class="form-select"><option value="">— none —</option></select><span asp-validation-for="WorkoutPlanId" class="text-danger small"></span></div>
+                    <div class="col-12"><label asp-for="Notes" class="form-label"></label><textarea asp-for="Notes" rows="2" class="form-control" placeholder="How did it feel?"></textarea></div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-4"><i class="bi bi-save"></i> Save</button>
+                <a asp-action="Index" class="btn btn-link mt-4">Cancel</a>
+            </form>
+            <datalist id="exerciseList">
+                @foreach (var x in new[] { "Brisk walk", "Cycling", "Easy run", "Tempo run", "Long run", "Swimming", "Yoga flow", "HIIT circuit", "Push-ups", "Goblet squats", "Lunges", "Plank", "Treadmill intervals" }) { <option value="@x"></option> }
+            </datalist>
+        </div></div>
+    </div>
+    @if (todays.Count > 0)
+    {
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header">Planned for today</div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var t in todays)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span><strong>@t.Exercise.Name</strong><br /><small class="text-muted">@t.Exercise.DurationMinutes min · @t.Exercise.Intensity</small></span>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="fillExercise(@System.Text.Json.JsonSerializer.Serialize(t.Exercise.Name), @t.Exercise.DurationMinutes, @((int)t.Exercise.Intensity), @t.Plan.Id)">Use</button>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+</div>
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+<script>
+    // Copies a planned exercise into the form so the client only has to press Save.
+    function fillExercise(name, minutes, intensity, planId) {
+        document.getElementById('ExerciseName').value = name;
+        document.getElementById('DurationMinutes').value = minutes;
+        document.getElementById('Intensity').value = intensity;
+        document.getElementById('WorkoutPlanId').value = planId;
+    }
+</script>
+}

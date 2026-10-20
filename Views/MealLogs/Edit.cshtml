@@ -1,0 +1,20 @@
+@model MealLog
+@{ bool isNew = Model.Id == 0; ViewData["Title"] = isNew ? "Log meal" : "Edit meal"; }
+<div class="page-header"><div><a asp-action="Index" class="small"><i class="bi bi-arrow-left"></i> Food diary</a><h1>@ViewData["Title"]</h1></div></div>
+<div class="card" style="max-width:760px"><div class="card-body">
+    <form asp-action="@(isNew ? "Create" : "Edit")" asp-route-id="@(isNew ? null : Model.Id)" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+        <div class="row g-3">
+            <div class="col-md-6"><label asp-for="MealType" class="form-label">Meal</label><select asp-for="MealType" asp-items="Html.GetEnumSelectList<MealType>()" class="form-select"></select></div>
+            <div class="col-md-6"><label asp-for="Date" class="form-label"></label><input asp-for="Date" type="date" class="form-control" max="@DateTime.Today.ToString("yyyy-MM-dd")" /><span asp-validation-for="Date" class="text-danger small"></span></div>
+            <div class="col-12"><label asp-for="Description" class="form-label">What did you eat?</label><input asp-for="Description" class="form-control" /><span asp-validation-for="Description" class="text-danger small"></span></div>
+            <div class="col-md-3"><label asp-for="Calories" class="form-label">Calories (kcal)</label><input asp-for="Calories" class="form-control" /><span asp-validation-for="Calories" class="text-danger small"></span></div>
+            <div class="col-md-3"><label asp-for="ProteinGrams" class="form-label">Protein (g)</label><input asp-for="ProteinGrams" class="form-control" step="0.1" /><span asp-validation-for="ProteinGrams" class="text-danger small"></span></div>
+            <div class="col-md-3"><label asp-for="CarbsGrams" class="form-label">Carbs (g)</label><input asp-for="CarbsGrams" class="form-control" step="0.1" /><span asp-validation-for="CarbsGrams" class="text-danger small"></span></div>
+            <div class="col-md-3"><label asp-for="FatGrams" class="form-label">Fat (g)</label><input asp-for="FatGrams" class="form-control" step="0.1" /><span asp-validation-for="FatGrams" class="text-danger small"></span></div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-4"><i class="bi bi-save"></i> Save</button>
+        <a asp-action="Index" class="btn btn-link mt-4">Cancel</a>
+    </form>
+</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,12 @@
+@model AssignTrainerViewModel
+@{ ViewData["Title"] = "Assign trainer"; var trainers = (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Trainers; }
+<div class="page-header"><div><a asp-action="Users" asp-route-role="Client" class="small"><i class="bi bi-arrow-left"></i> Clients</a><h1>Assign trainer</h1><p class="subtitle">@Model.ClientName</p></div></div>
+<div class="card" style="max-width:560px"><div class="card-body">
+    <form asp-action="AssignTrainer" method="post">
+        <input type="hidden" asp-for="ClientId" />
+        <label asp-for="TrainerId" class="form-label"></label>
+        <select asp-for="TrainerId" class="form-select mb-3" asp-items="trainers"><option value="">— no trainer —</option></select>
+        <p class="small text-muted">Both the client and the trainer receive a notification.</p>
+        <button type="submit" class="btn btn-primary">Save assignment</button>
+    </form>
+</div></div>

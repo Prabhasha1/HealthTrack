@@ -1,0 +1,104 @@
+/* HealthTrack theme - built on Bootstrap 5 */
+:root {
+    --ht-primary: #0f766e;        /* teal */
+    --ht-primary-dark: #115e59;
+    --ht-accent: #f97316;         /* orange for energy/calories */
+    --ht-bg: #f4f7f6;
+    --ht-sidebar: #0b2e2b;
+    --ht-card-radius: 14px;
+    --bs-primary: #0f766e;
+    --bs-primary-rgb: 15, 118, 110;
+    --bs-link-color: #0f766e;
+    --bs-link-hover-color: #115e59;
+    --bs-link-color-rgb: 15, 118, 110;
+}
+
+body { background: var(--ht-bg); font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; color: #1f2937; }
+
+.btn-primary { --bs-btn-bg: var(--ht-primary); --bs-btn-border-color: var(--ht-primary); --bs-btn-hover-bg: var(--ht-primary-dark); --bs-btn-hover-border-color: var(--ht-primary-dark); --bs-btn-active-bg: var(--ht-primary-dark); --bs-btn-disabled-bg: var(--ht-primary); }
+.btn-outline-primary { --bs-btn-color: var(--ht-primary); --bs-btn-border-color: var(--ht-primary); --bs-btn-hover-bg: var(--ht-primary); --bs-btn-hover-border-color: var(--ht-primary); --bs-btn-active-bg: var(--ht-primary); }
+.text-primary { color: var(--ht-primary) !important; }
+.bg-primary { background-color: var(--ht-primary) !important; }
+.form-control:focus, .form-select:focus { border-color: #5eb5ad; box-shadow: 0 0 0 .2rem rgba(15,118,110,.18); }
+.form-check-input:checked { background-color: var(--ht-primary); border-color: var(--ht-primary); }
+
+/* ---------- App shell ---------- */
+.app-shell { display: flex; min-height: 100vh; }
+.sidebar { width: 250px; background: var(--ht-sidebar); color: #cfe3e0; flex-shrink: 0; }
+@media (min-width: 992px) { .sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; } }
+.sidebar-brand { display: flex; align-items: center; gap: .5rem; font-weight: 700; font-size: 1.25rem; color: #fff; padding: 1.25rem 1.25rem 1rem; }
+.sidebar-brand .bi { color: #5eead4; }
+.sidebar .nav { padding: 0 .75rem 1.5rem; list-style: none; }
+.sidebar .nav-section { text-transform: uppercase; font-size: .7rem; letter-spacing: .08em; color: #6b9e98; padding: 1rem .75rem .35rem; }
+.sidebar .nav-link { color: #cfe3e0; border-radius: 8px; padding: .5rem .75rem; display: flex; gap: .65rem; align-items: center; }
+.sidebar .nav-link:hover { background: rgba(255,255,255,.07); color: #fff; }
+.sidebar .nav-link.active { background: var(--ht-primary); color: #fff; }
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.topbar { background: #fff; border-bottom: 1px solid #e5ebe9; padding: .6rem 1.5rem; display: flex; align-items: center; position: sticky; top: 0; z-index: 1020; }
+.content { padding: 1.5rem; flex: 1; }
+.app-footer { padding: 1rem 1.5rem; font-size: .8rem; color: #6b7280; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--ht-primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; }
+.bell-menu { width: 340px; max-height: 420px; overflow-y: auto; }
+.bell-item { display: flex; gap: .75rem; white-space: normal; padding: .6rem 1rem; border-bottom: 1px solid #f1f5f4; }
+.bell-item.unread { background: #ecfdf8; }
+.bell-item .bi { font-size: 1.2rem; margin-top: .1rem; }
+
+/* ---------- Page elements ---------- */
+.page-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: 1.25rem; }
+.page-header h1 { font-size: 1.6rem; font-weight: 700; margin: 0; }
+.page-header .subtitle { color: #6b7280; margin: .15rem 0 0; }
+.card { border: 0; border-radius: var(--ht-card-radius); box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.05); }
+.card-header { background: transparent; border-bottom: 1px solid #eef2f1; font-weight: 600; padding: .9rem 1.1rem; display: flex; justify-content: space-between; align-items: center; }
+.stat-card { padding: 1.1rem 1.2rem; height: 100%; }
+.stat-card .label { color: #6b7280; font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
+.stat-card .value { font-size: 1.75rem; font-weight: 700; line-height: 1.2; }
+.stat-card .hint { font-size: .82rem; color: #6b7280; }
+.stat-icon { width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+.ic-teal { background: #ccfbf1; color: #0f766e; }
+.ic-orange { background: #ffedd5; color: #c2410c; }
+.ic-blue { background: #dbeafe; color: #1d4ed8; }
+.ic-purple { background: #ede9fe; color: #6d28d9; }
+.ic-red { background: #fee2e2; color: #b91c1c; }
+.chart-box { position: relative; height: 280px; }
+.chart-box.sm { height: 220px; }
+.table > :not(caption) > * > * { padding: .65rem .75rem; }
+.table thead th { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; font-weight: 600; background: #f8faf9; }
+.empty-state { text-align: center; padding: 2rem 1rem; color: #6b7280; }
+.empty-state .bi { font-size: 2.2rem; display: block; margin-bottom: .5rem; color: #9ca3af; }
+.day-chip { display: inline-block; min-width: 42px; text-align: center; padding: .15rem .5rem; border-radius: 6px; background: #e6f4f1; color: var(--ht-primary-dark); font-size: .8rem; font-weight: 600; }
+.timeline-item { border-left: 3px solid #d1e7e3; padding: 0 0 1rem 1rem; position: relative; }
+.timeline-item::before { content: ""; width: 11px; height: 11px; border-radius: 50%; background: var(--ht-primary); position: absolute; left: -7px; top: 4px; }
+.progress-thin { height: 8px; }
+.feedback-quote { background: #f8faf9; border-left: 4px solid var(--ht-primary); padding: .75rem 1rem; border-radius: 8px; }
+.row-form .form-control, .row-form .form-select { font-size: .9rem; }
+.text-accent { color: var(--ht-accent); }
+
+/* ---------- Public pages ---------- */
+.public-nav { background: var(--ht-sidebar); padding: .8rem 0; }
+.public-nav .navbar-brand { color: #fff; font-weight: 700; }
+.public-nav .navbar-brand .bi { color: #5eead4; }
+.hero { background: linear-gradient(135deg, #0b2e2b 0%, #0f766e 100%); color: #fff; padding: 5rem 0 6rem; }
+.hero h1 { font-size: 2.8rem; font-weight: 800; }
+.hero .lead { color: #ccfbf1; }
+.feature .bi { font-size: 1.8rem; color: var(--ht-primary); }
+.auth-card { max-width: 460px; margin: 3rem auto; }
+.auth-card.wide { max-width: 720px; }
+
+@media print {
+    .sidebar, .topbar, .app-footer, .no-print, .btn { display: none !important; }
+    .content { padding: 0; }
+    .card { box-shadow: none; border: 1px solid #ddd; }
+}
+
+/* Fixes: dark sidebar on large screens (Bootstrap makes .offcanvas-lg transparent), hidden empty validation summary */
+@media (min-width: 992px) { .sidebar.offcanvas-lg { background-color: var(--ht-sidebar) !important; } }
+.offcanvas.sidebar { background-color: var(--ht-sidebar); }
+.validation-summary-valid { display: none; }
+.validation-summary-errors ul { margin: 0; padding-left: 1.1rem; }
+.day-chip { white-space: nowrap; }
+.progress-bar { background-color: var(--ht-primary); }
+.input-validation-error { border-color: #dc3545; }
+@media (min-width: 992px) { .app-shell { background: linear-gradient(to right, var(--ht-sidebar) 250px, var(--ht-bg) 250px); } }
+.nav-pills { --bs-nav-pills-link-active-bg: var(--ht-primary); }
+.nav-pills .nav-link { color: var(--ht-primary-dark); }
+.nav-pills .nav-link.active { color: #fff; }

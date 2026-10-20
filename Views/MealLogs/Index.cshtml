@@ -1,0 +1,76 @@
+@model List<MealLog>
+@{
+    ViewData["Title"] = "Food diary";
+    DateTime day = ViewBag.Date;
+    int? target = ViewBag.Target;
+    DietPlan? plan = ViewBag.Plan;
+    int total = Model.Sum(m => m.Calories);
+    int pct = target.HasValue ? Math.Min(100, total * 100 / target.Value) : 0;
+}
+<div class="page-header">
+    <div><h1>Food diary</h1><p class="subtitle">@day.ToString("dddd, d MMMM yyyy")</p></div>
+    <div class="d-flex gap-2 align-items-center">
+        <a asp-route-date="@day.AddDays(-1).ToString("yyyy-MM-dd")" class="btn btn-outline-secondary"><i class="bi bi-chevron-left"></i></a>
+        <form method="get"><input type="date" name="date" value="@day.ToString("yyyy-MM-dd")" max="@DateTime.Today.ToString("yyyy-MM-dd")" class="form-control" onchange="this.form.submit()" /></form>
+        <a asp-route-date="@day.AddDays(1).ToString("yyyy-MM-dd")" class="btn btn-outline-secondary @(day >= DateTime.Today ? "disabled" : "")"><i class="bi bi-chevron-right"></i></a>
+        <a asp-action="Create" asp-route-date="@day.ToString("yyyy-MM-dd")" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Log meal</a>
+    </div>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="card stat-card"><span class="label">Calories</span><div class="value">@total @if (target.HasValue) { <small class="fs-6 fw-normal">/ @target</small> }</div>
+        @if (target.HasValue) { <div class="progress progress-thin mt-2"><div class="progress-bar @(total > target ? "bg-danger" : "bg-success")" style="width:@pct%"></div></div> }</div></div>
+    <div class="col-4 col-md-2"><div class="card stat-card"><span class="label">Protein</span><div class="value fs-4">@Model.Sum(m => m.ProteinGrams).ToString("0") g</div></div></div>
+    <div class="col-4 col-md-2"><div class="card stat-card"><span class="label">Carbs</span><div class="value fs-4">@Model.Sum(m => m.CarbsGrams).ToString("0") g</div></div></div>
+    <div class="col-4 col-md-2"><div class="card stat-card"><span class="label">Fat</span><div class="value fs-4">@Model.Sum(m => m.FatGrams).ToString("0") g</div></div></div>
+    <div class="col-md-2"><div class="card stat-card"><span class="label">Meals</span><div class="value fs-4">@Model.Count</div></div></div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">Logged meals</div>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>Meal</th><th>Description</th><th>kcal</th><th>P / C / F (g)</th><th></th></tr></thead>
+                    <tbody>
+                    @if (Model.Count == 0) { <tr><td colspan="5" class="empty-state"><i class="bi bi-egg-fried"></i>Nothing logged for this day.</td></tr> }
+                    @foreach (var m in Model)
+                    {
+                        <tr>
+                            <td><strong>@Display.Words(m.MealType)</strong></td>
+                            <td>@m.Description</td>
+                            <td>@m.Calories</td>
+                            <td class="small">@m.ProteinGrams.ToString("0") / @m.CarbsGrams.ToString("0") / @m.FatGrams.ToString("0")</td>
+                            <td class="text-end text-nowrap">
+                                <a asp-action="Edit" asp-route-id="@m.Id" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                                <form asp-action="Delete" asp-route-id="@m.Id" method="post" class="d-inline"><button class="btn btn-sm btn-outline-danger" data-confirm="Delete this meal?"><i class="bi bi-trash"></i></button></form>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">Planned meals</div>
+            @if (plan == null)
+            {
+                <div class="card-body text-muted small">No active diet plan.</div>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var pm in plan.Meals.OrderBy(x => x.Time))
+                    {
+                        bool done = Model.Any(m => m.MealType == pm.MealType);
+                        <li class="list-group-item d-flex justify-content-between align-items-center small">
+                            <span><i class="bi @(done ? "bi-check-circle-fill text-success" : "bi-circle text-muted")"></i> <strong>@Display.Words(pm.MealType)</strong> @pm.Time.ToString(@"hh\:mm")<br /><span class="text-muted">@pm.Description</span></span>
+                            @if (!done) { <a asp-action="Create" asp-route-date="@day.ToString("yyyy-MM-dd")" asp-route-type="@pm.MealType" class="btn btn-sm btn-outline-primary">Log</a> }
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>

@@ -1,0 +1,111 @@
+@model TrainerDashboardViewModel
+@using System.Text.Json
+@{ ViewData["Title"] = "Trainer dashboard"; }
+<div class="page-header">
+    <div>
+        <h1>Trainer dashboard</h1>
+        <p class="subtitle">@Model.Trainer.FullName · @(Model.Trainer.Specialization ?? Model.Trainer.ProfessionalType?.ToString())</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="WorkoutPlans" asp-action="Create" class="btn btn-primary"><i class="bi bi-clipboard2-plus"></i> New workout plan</a>
+        <a asp-controller="DietPlans" asp-action="Create" class="btn btn-outline-primary"><i class="bi bi-basket"></i> New diet plan</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3"><div class="card stat-card"><span class="label">My clients</span><div class="value">@Model.Clients.Count</div><div class="hint">assigned or booked with you</div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card"><span class="label">Pending requests</span><div class="value text-warning">@Model.PendingAppointments.Count</div><div class="hint">appointments to review</div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card"><span class="label">Active plans</span><div class="value">@(Model.ActiveWorkoutPlans + Model.ActiveDietPlans)</div><div class="hint">@Model.ActiveWorkoutPlans workout · @Model.ActiveDietPlans diet</div></div></div>
+    <div class="col-6 col-xl-3"><div class="card stat-card"><span class="label">Need attention</span><div class="value text-danger">@Model.ClientsNeedingAttention</div><div class="hint">no activity for 3+ days</div></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <div class="card mb-4">
+            <div class="card-header">Client progress</div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead><tr><th>Client</th><th>Weight</th><th>BMI</th><th>30-day change</th><th>Workouts (7d)</th><th>Last active</th><th>Plans</th><th></th></tr></thead>
+                    <tbody>
+                    @if (Model.Clients.Count == 0)
+                    {
+                        <tr><td colspan="8" class="empty-state">No clients yet. An administrator can assign clients to you.</td></tr>
+                    }
+                    @foreach (var c in Model.Clients)
+                    {
+                        bool stale = c.LastActivity == null || c.LastActivity < DateTime.Today.AddDays(-3);
+                        <tr>
+                            <td><strong>@c.FullName</strong><br /><small class="text-muted">@c.Email</small></td>
+                            <td>@(c.CurrentWeight?.ToString("0.0") ?? "–")</td>
+                            <td>@if (c.CurrentBmi.HasValue) { <span class="badge @HealthCalculator.BmiBadgeClass(c.CurrentBmi.Value)">@c.CurrentBmi.Value.ToString("0.0")</span> } else { <span>–</span> }</td>
+                            <td>
+                                @if (c.WeightChange30Days.HasValue)
+                                {
+                                    <span class="@(c.WeightChange30Days <= 0 ? "text-success" : "text-danger")">@(c.WeightChange30Days > 0 ? "+" : "")@c.WeightChange30Days kg</span>
+                                }
+                                else { <span>–</span> }
+                            </td>
+                            <td>@c.WorkoutsLast7Days</td>
+                            <td class="@(stale ? "text-danger" : "")">@(c.LastActivity.HasValue ? c.LastActivity.Value.ToString("dd MMM") : "never")</td>
+                            <td>
+                                <i class="bi bi-clipboard2-pulse @(c.HasActiveWorkoutPlan ? "text-success" : "text-muted opacity-50")" title="Workout plan"></i>
+                                <i class="bi bi-basket @(c.HasActiveDietPlan ? "text-success" : "text-muted opacity-50")" title="Diet plan"></i>
+                            </td>
+                            <td><a asp-action="ClientDetail" asp-route-id="@c.ClientId" class="btn btn-sm btn-outline-primary">View</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Workouts logged by client (last 7 days)</div>
+            <div class="card-body"><div class="chart-box sm"><canvas id="clientChart"></canvas></div></div>
+        </div>
+    </div>
+    <div class="col-xl-4">
+        <div class="card mb-4">
+            <div class="card-header">Pending requests <a asp-controller="Appointments" asp-action="Index" asp-route-view="pending" class="small fw-normal">All</a></div>
+            <div class="card-body">
+                @if (Model.PendingAppointments.Count == 0) { <p class="text-muted small mb-0">No requests waiting.</p> }
+                @foreach (var a in Model.PendingAppointments)
+                {
+                    <div class="border-bottom py-2">
+                        <div class="d-flex justify-content-between">
+                            <strong>@a.Client?.FullName</strong>
+                            <small class="text-muted">@a.StartTime.ToString("ddd dd MMM HH:mm")</small>
+                        </div>
+                        <small class="text-muted d-block mb-2">@Display.Words(a.Type) · @a.DurationMinutes min</small>
+                        <div class="d-flex gap-2">
+                            <form asp-controller="Appointments" asp-action="Approve" asp-route-id="@a.Id" method="post">
+                                <button class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i> Approve</button>
+                            </form>
+                            <a asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-secondary">Details</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">Today's schedule</div>
+            <div class="card-body">
+                @if (Model.TodaysAppointments.Count == 0) { <p class="text-muted small mb-0">No confirmed sessions today.</p> }
+                @foreach (var a in Model.TodaysAppointments)
+                {
+                    <div class="timeline-item">
+                        <strong>@a.StartTime.ToString("HH:mm")–@a.EndTime.ToString("HH:mm")</strong>
+                        <div class="small">@a.Client?.FullName · @Display.Words(a.Type)</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+<script>
+    htChart('clientChart', 'bar', @Html.Raw(JsonSerializer.Serialize(Model.ClientNames)), [{
+        label: 'Workouts', data: @Html.Raw(JsonSerializer.Serialize(Model.ClientWorkoutCounts)),
+        backgroundColor: HT.teal, borderRadius: 6, maxBarThickness: 48
+    }], { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } } });
+</script>
+}

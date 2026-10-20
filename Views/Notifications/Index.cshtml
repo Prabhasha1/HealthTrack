@@ -1,0 +1,28 @@
+@model List<Notification>
+@{ ViewData["Title"] = "Notifications"; bool unreadOnly = ViewBag.UnreadOnly; }
+<div class="page-header">
+    <div><h1>Notifications</h1><p class="subtitle">Reminders for workouts, meals and appointments, plus updates from your team.</p></div>
+    <div class="d-flex gap-2">
+        <a asp-route-unreadOnly="@(!unreadOnly)" class="btn btn-outline-secondary">@(unreadOnly ? "Show all" : "Unread only")</a>
+        <form asp-action="MarkAllRead" method="post"><button class="btn btn-outline-primary"><i class="bi bi-check2-all"></i> Mark all read</button></form>
+    </div>
+</div>
+<div class="card">
+    <ul class="list-group list-group-flush">
+        @if (Model.Count == 0) { <li class="list-group-item empty-state"><i class="bi bi-bell-slash"></i>No notifications.</li> }
+        @foreach (var n in Model)
+        {
+            <li class="list-group-item d-flex gap-3 align-items-start @(n.IsRead ? "" : "bg-light")">
+                <i class="bi @NotificationIcon.For(n.Type) fs-4"></i>
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between"><strong>@n.Title @if (!n.IsRead) { <span class="badge bg-primary ms-1">new</span> }</strong><small class="text-muted">@n.CreatedAt.ToString("dd MMM HH:mm")</small></div>
+                    <div class="text-muted small">@n.Message</div>
+                </div>
+                <div class="d-flex gap-1">
+                    <form asp-action="Open" asp-route-id="@n.Id" method="post"><button class="btn btn-sm btn-outline-primary">Open</button></form>
+                    <form asp-action="Delete" asp-route-id="@n.Id" method="post"><button class="btn btn-sm btn-outline-secondary" title="Delete"><i class="bi bi-x"></i></button></form>
+                </div>
+            </li>
+        }
+    </ul>
+</div>

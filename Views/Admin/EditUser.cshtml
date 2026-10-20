@@ -1,0 +1,54 @@
+@model UserEditViewModel
+@{
+    bool isNew = string.IsNullOrEmpty(Model.Id);
+    ViewData["Title"] = isNew ? "New user" : "Edit user";
+    var trainers = (List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Trainers;
+}
+<div class="page-header"><div><a asp-action="Users" class="small"><i class="bi bi-arrow-left"></i> Users</a><h1>@ViewData["Title"]</h1></div></div>
+<div class="card" style="max-width:820px">
+    <div class="card-body">
+        <form asp-action="@(isNew ? "CreateUser" : "EditUser")" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="row g-3">
+                <div class="col-md-6"><label asp-for="FullName" class="form-label"></label><input asp-for="FullName" class="form-control" /><span asp-validation-for="FullName" class="text-danger small"></span></div>
+                <div class="col-md-6"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control" /><span asp-validation-for="Email" class="text-danger small"></span></div>
+                <div class="col-md-6"><label asp-for="PhoneNumber" class="form-label"></label><input asp-for="PhoneNumber" class="form-control" /></div>
+                <div class="col-md-6">
+                    <label asp-for="Role" class="form-label"></label>
+                    <select asp-for="Role" class="form-select" id="roleSelect">
+                        @foreach (var r in Roles.All) { <option value="@r">@r</option> }
+                    </select>
+                </div>
+                <div class="col-md-6 trainer-only"><label asp-for="ProfessionalType" class="form-label"></label>
+                    <select asp-for="ProfessionalType" class="form-select" asp-items="Html.GetEnumSelectList<ProfessionalType>()"><option value="">--</option></select></div>
+                <div class="col-md-6 trainer-only"><label asp-for="Specialization" class="form-label"></label><input asp-for="Specialization" class="form-control" /></div>
+                <div class="col-md-6 client-only"><label asp-for="AssignedTrainerId" class="form-label"></label>
+                    <select asp-for="AssignedTrainerId" class="form-select" asp-items="trainers"><option value="">— none —</option></select></div>
+                <div class="col-md-6">
+                    <label asp-for="Password" class="form-label">@(isNew ? "Password" : "Reset password (optional)")</label>
+                    <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+                <div class="col-12"><div class="form-check form-switch"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label"></label></div></div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save</button>
+                <a asp-action="Users" class="btn btn-link">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+@section Scripts {
+<partial name="_ValidationScriptsPartial" />
+<script>
+    // Show only the fields that apply to the selected role.
+    function toggleRoleFields() {
+        const role = document.getElementById('roleSelect').value;
+        document.querySelectorAll('.trainer-only').forEach(e => e.classList.toggle('d-none', role !== 'Trainer'));
+        document.querySelectorAll('.client-only').forEach(e => e.classList.toggle('d-none', role !== 'Client'));
+    }
+    document.getElementById('roleSelect').addEventListener('change', toggleRoleFields);
+    toggleRoleFields();
+</script>
+}

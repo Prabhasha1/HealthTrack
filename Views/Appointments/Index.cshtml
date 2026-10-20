@@ -1,0 +1,44 @@
+@model List<Appointment>
+@{
+    ViewData["Title"] = "Appointments";
+    string view = ViewBag.View;
+    bool client = User.IsInRole(Roles.Client);
+    var tabs = new[] { ("upcoming", "Upcoming"), ("pending", "Pending"), ("past", "Past & closed"), ("all", "All") };
+}
+<div class="page-header">
+    <div><h1>Appointments</h1><p class="subtitle">@(client ? "Consultations with your trainers and health professionals." : "Requests and sessions with your clients.")</p></div>
+    @if (client) { <a asp-action="Create" class="btn btn-primary"><i class="bi bi-calendar-plus"></i> Book appointment</a> }
+</div>
+<ul class="nav nav-pills mb-3">
+    @foreach (var (key, label) in tabs)
+    {
+        <li class="nav-item"><a class="nav-link @(view == key ? "active" : "")" asp-route-view="@key">@label</a></li>
+    }
+</ul>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead><tr><th>Date &amp; time</th><th>Type</th><th>@(client ? "With" : "Client")</th>@if (User.IsInRole(Roles.Admin)) { <th>Professional</th> }<th>Status</th><th></th></tr></thead>
+            <tbody>
+            @if (Model.Count == 0) { <tr><td colspan="6" class="empty-state"><i class="bi bi-calendar"></i>No appointments here.</td></tr> }
+            @foreach (var a in Model)
+            {
+                <tr>
+                    <td class="text-nowrap"><strong>@a.StartTime.ToString("ddd dd MMM yyyy")</strong><br /><small class="text-muted">@a.StartTime.ToString("HH:mm")–@a.EndTime.ToString("HH:mm")</small></td>
+                    <td>@Display.Words(a.Type)</td>
+                    <td>@(client ? a.Trainer?.FullName : a.Client?.FullName)</td>
+                    @if (User.IsInRole(Roles.Admin)) { <td>@a.Trainer?.FullName</td> }
+                    <td><span class="badge @Display.StatusBadge(a.Status)">@a.Status</span></td>
+                    <td class="text-end text-nowrap">
+                        @if (User.IsInRole(Roles.Trainer) && a.Status == AppointmentStatus.Pending && a.StartTime > DateTime.Now)
+                        {
+                            <form asp-action="Approve" asp-route-id="@a.Id" method="post" class="d-inline"><button class="btn btn-sm btn-success" title="Approve"><i class="bi bi-check-lg"></i></button></form>
+                        }
+                        <a asp-action="Details" asp-route-id="@a.Id" class="btn btn-sm btn-outline-primary">Details</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

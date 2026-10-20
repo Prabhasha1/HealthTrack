@@ -1,0 +1,38 @@
+@model AppointmentForm
+@{ ViewData["Title"] = "Book appointment"; }
+<div class="page-header"><div><a asp-action="Index" class="small"><i class="bi bi-arrow-left"></i> Appointments</a><h1>Book an appointment</h1><p class="subtitle">Your request is sent to the professional for approval.</p></div></div>
+<div class="card" style="max-width:760px"><div class="card-body">
+    <form asp-action="Create" method="post" novalidate>
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+        <div class="row g-3">
+            <div class="col-md-7">
+                <label asp-for="TrainerId" class="form-label"></label>
+                <select asp-for="TrainerId" asp-items="Model.TrainerOptions" class="form-select"><option value="">-- choose --</option></select>
+                <span asp-validation-for="TrainerId" class="text-danger small"></span>
+            </div>
+            <div class="col-md-5">
+                <label asp-for="Type" class="form-label"></label>
+                <select asp-for="Type" asp-items="Html.GetEnumSelectList<AppointmentType>()" class="form-select"></select>
+            </div>
+            <div class="col-md-7">
+                <label asp-for="StartTime" class="form-label"></label>
+                <input asp-for="StartTime" type="datetime-local" class="form-control" value="@Model.StartTime.ToString("yyyy-MM-ddTHH:mm")" min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")" step="900" />
+                <span asp-validation-for="StartTime" class="text-danger small"></span>
+                <div class="form-text">Between 06:00 and 21:00.</div>
+            </div>
+            <div class="col-md-5">
+                <label asp-for="DurationMinutes" class="form-label"></label>
+                <select asp-for="DurationMinutes" class="form-select">
+                    @foreach (var m in new[] { 30, 45, 60, 90, 120 }) { <option value="@m">@m minutes</option> }
+                </select>
+            </div>
+            <div class="col-12">
+                <label asp-for="ClientNotes" class="form-label"></label>
+                <textarea asp-for="ClientNotes" rows="3" class="form-control" placeholder="What would you like to discuss?"></textarea>
+                <div class="form-text"><i class="bi bi-lock-fill"></i> Stored encrypted.</div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-4"><i class="bi bi-send"></i> Send request</button>
+    </form>
+</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

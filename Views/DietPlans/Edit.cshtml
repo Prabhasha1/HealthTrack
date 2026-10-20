@@ -1,0 +1,59 @@
+@model DietPlanForm
+@{
+    bool isNew = Model.Id == 0;
+    ViewData["Title"] = isNew ? "New diet plan" : "Edit diet plan";
+}
+<div class="page-header"><div><a asp-action="Index" class="small"><i class="bi bi-arrow-left"></i> Diet plans</a><h1>@ViewData["Title"]</h1></div></div>
+<form asp-action="@(isNew ? "Create" : "Edit")" asp-route-id="@(isNew ? null : Model.Id)" method="post" novalidate>
+    <div asp-validation-summary="All" class="alert alert-danger py-2"></div>
+    <div class="card mb-4">
+        <div class="card-header">Plan details</div>
+        <div class="card-body row g-3">
+            <div class="col-md-6"><label asp-for="Title" class="form-label"></label><input asp-for="Title" class="form-control" /><span asp-validation-for="Title" class="text-danger small"></span></div>
+            <div class="col-md-6">
+                <label asp-for="ClientId" class="form-label"></label>
+                <select asp-for="ClientId" asp-items="Model.ClientOptions" class="form-select"><option value="">-- choose client --</option></select>
+                <span asp-validation-for="ClientId" class="text-danger small"></span>
+            </div>
+            <div class="col-md-4"><label asp-for="DailyCalorieTarget" class="form-label"></label><input asp-for="DailyCalorieTarget" class="form-control" /><span asp-validation-for="DailyCalorieTarget" class="text-danger small"></span></div>
+            <div class="col-md-3"><label asp-for="StartDate" class="form-label"></label><input asp-for="StartDate" type="date" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="EndDate" class="form-label"></label><input asp-for="EndDate" type="date" class="form-control" /></div>
+            <div class="col-md-2 d-flex align-items-end"><div class="form-check form-switch mb-2"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label"></label></div></div>
+            <div class="col-12"><label asp-for="Description" class="form-label">Guidance for the client</label><textarea asp-for="Description" rows="2" class="form-control"></textarea></div>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header">Meals
+            <button type="button" class="btn btn-sm btn-outline-primary" data-add-row="mealRows" data-template="mealTemplate"><i class="bi bi-plus"></i> Add meal</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 row-form">
+                <thead><tr><th style="width:190px">Meal</th><th style="width:130px">Time</th><th>Description</th><th style="width:110px">kcal</th><th></th></tr></thead>
+                <tbody id="mealRows">
+                @for (int i = 0; i < Model.Meals.Count; i++)
+                {
+                    <tr>
+                        <td><select asp-for="Meals[i].MealType" asp-items="Html.GetEnumSelectList<MealType>()" class="form-select"></select></td>
+                        <td><input asp-for="Meals[i].Time" type="time" class="form-control" value="@Model.Meals[i].Time.ToString(@"hh\:mm")" /></td>
+                        <td><input asp-for="Meals[i].Description" class="form-control" /></td>
+                        <td><input asp-for="Meals[i].Calories" class="form-control" min="0" /></td>
+                        <td><button type="button" class="btn btn-sm btn-outline-danger" data-remove-row><i class="bi bi-x-lg"></i></button></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save plan</button>
+    <a asp-action="Index" class="btn btn-link">Cancel</a>
+</form>
+<template id="mealTemplate">
+    <tr>
+        <td><select name="Meals[__i__].MealType" class="form-select">@foreach (var t in Enum.GetValues<MealType>()) { <option value="@t">@Display.Words(t)</option> }</select></td>
+        <td><input name="Meals[__i__].Time" type="time" value="12:00" class="form-control" /></td>
+        <td><input name="Meals[__i__].Description" class="form-control" maxlength="200" /></td>
+        <td><input name="Meals[__i__].Calories" type="number" value="400" min="0" class="form-control" /></td>
+        <td><button type="button" class="btn btn-sm btn-outline-danger" data-remove-row><i class="bi bi-x-lg"></i></button></td>
+    </tr>
+</template>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

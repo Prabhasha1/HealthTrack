@@ -1,0 +1,40 @@
+@model List<ActivityLog>
+@{
+    ViewData["Title"] = "Audit log";
+    int pageNo = ViewBag.Page; int pages = ViewBag.TotalPages; string? current = ViewBag.Filter;
+}
+<div class="page-header">
+    <div><h1>Audit log</h1><p class="subtitle">Security-relevant actions such as logins, failed logins, account changes and exports.</p></div>
+    <form method="get" class="d-flex gap-2">
+        <select name="filter" class="form-select" onchange="this.form.submit()">
+            <option value="">All actions</option>
+            @foreach (string a in ViewBag.Actions) { <option value="@a" selected="@(a == current)">@a</option> }
+        </select>
+    </form>
+</div>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+            <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Details</th><th>IP address</th></tr></thead>
+            <tbody>
+            @foreach (var a in Model)
+            {
+                <tr class="@(a.Action.Contains("failed") || a.Action.Contains("locked") ? "table-warning" : "")">
+                    <td class="text-nowrap">@a.Timestamp.ToString("dd MMM yyyy HH:mm")</td>
+                    <td>@(a.User?.FullName ?? "—")</td>
+                    <td><strong>@a.Action</strong></td>
+                    <td class="small text-muted">@a.Details</td>
+                    <td class="small">@a.IpAddress</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <span class="small text-muted">Page @pageNo of @pages</span>
+        <div class="btn-group btn-group-sm">
+            <a class="btn btn-outline-secondary @(pageNo <= 1 ? "disabled" : "")" asp-route-page="@(pageNo - 1)" asp-route-filter="@current">Previous</a>
+            <a class="btn btn-outline-secondary @(pageNo >= pages ? "disabled" : "")" asp-route-page="@(pageNo + 1)" asp-route-filter="@current">Next</a>
+        </div>
+    </div>
+</div>

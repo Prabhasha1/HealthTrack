@@ -1,0 +1,71 @@
+@model RegisterViewModel
+@{ ViewData["Title"] = "Create account"; }
+<div class="container">
+    <div class="card auth-card wide p-4 p-md-5">
+        <h1 class="h3 fw-bold mb-1">Create your account</h1>
+        <p class="text-muted mb-4">Start tracking your workouts, meals and health metrics.</p>
+        <form asp-action="Register" method="post" novalidate>
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label asp-for="FullName" class="form-label"></label>
+                    <input asp-for="FullName" class="form-control" autocomplete="name" />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Email" class="form-label"></label>
+                    <input asp-for="Email" class="form-control" autocomplete="email" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="PhoneNumber" class="form-label"></label>
+                    <input asp-for="PhoneNumber" class="form-control" autocomplete="tel" />
+                    <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="DateOfBirth" class="form-label"></label>
+                    <input asp-for="DateOfBirth" class="form-control" type="date" />
+                    <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Gender" class="form-label"></label>
+                    <select asp-for="Gender" class="form-select" asp-items="Html.GetEnumSelectList<Gender>()">
+                        <option value="">-- select --</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="HeightCm" class="form-label"></label>
+                    <input asp-for="HeightCm" class="form-control" type="number" step="0.1" />
+                    <span asp-validation-for="HeightCm" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="FitnessGoal" class="form-label"></label>
+                    <input asp-for="FitnessGoal" class="form-control" placeholder="e.g. Lose 5 kg and run a 5K" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Password" class="form-label"></label>
+                    <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                    <div class="form-text">At least 8 characters with upper and lower case letters, a number and a symbol.</div>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="ConfirmPassword" class="form-label"></label>
+                    <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input asp-for="AcceptPrivacy" class="form-check-input" />
+                        <label asp-for="AcceptPrivacy" class="form-check-label">
+                            I have read the <a asp-controller="Home" asp-action="Privacy" target="_blank">privacy notice</a> and agree to HealthTrack storing my health data.
+                        </label>
+                        <span asp-validation-for="AcceptPrivacy" class="text-danger small d-block"></span>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2 mt-4">Create account</button>
+        </form>
+        <p class="text-center mt-4 mb-0">Already registered? <a asp-action="Login">Sign in</a></p>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

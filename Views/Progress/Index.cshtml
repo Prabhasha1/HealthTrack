@@ -1,0 +1,7 @@
+@model ProgressViewModel
+@{ ViewData["Title"] = "Progress"; }
+<div class="page-header">
+    <div><h1>Progress &amp; analytics</h1><p class="subtitle">@Model.ClientName · last @Model.Days days</p></div>
+    <partial name="_PeriodPicker" model="Model.Days" />
+</div>
+<partial name="_ProgressCharts" model="Model" />

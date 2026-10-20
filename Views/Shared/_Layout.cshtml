@@ -1,0 +1,127 @@
+@{
+    bool signedIn = User.Identity?.IsAuthenticated == true;
+    string controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    string Active(string c, string? a = null) =>
+        controller == c && (a == null || action == a) ? "active" : "";
+    string displayName = User.FindFirst(AppClaimsPrincipalFactory.FullNameClaim)?.Value ?? User.Identity?.Name ?? "";
+    string roleLabel = User.IsInRole(Roles.Admin) ? "Administrator" : User.IsInRole(Roles.Trainer) ? "Trainer" : "Client";
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - HealthTrack</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="@(signedIn ? "app" : "public")">
+@if (signedIn)
+{
+    <div class="app-shell">
+        <!-- Sidebar navigation: links depend on the user's role -->
+        <nav class="sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="sidebar" aria-label="Main navigation">
+            <div class="sidebar-brand">
+                <i class="bi bi-heart-pulse-fill"></i> HealthTrack
+                <button type="button" class="btn-close btn-close-white d-lg-none ms-auto" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+            </div>
+            <ul class="nav flex-column">
+                @if (User.IsInRole(Roles.Client))
+                {
+                    <li class="nav-section">My health</li>
+                    <li><a class="nav-link @Active("Client", "Dashboard")" asp-controller="Client" asp-action="Dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                    <li><a class="nav-link @Active("Progress")" asp-controller="Progress" asp-action="Index"><i class="bi bi-graph-up-arrow"></i> Progress</a></li>
+                    <li><a class="nav-link @Active("Measurements")" asp-controller="Measurements" asp-action="Index"><i class="bi bi-rulers"></i> Measurements</a></li>
+                    <li><a class="nav-link @Active("WorkoutLogs")" asp-controller="WorkoutLogs" asp-action="Index"><i class="bi bi-activity"></i> Workout log</a></li>
+                    <li><a class="nav-link @Active("MealLogs")" asp-controller="MealLogs" asp-action="Index"><i class="bi bi-egg-fried"></i> Food diary</a></li>
+                    <li class="nav-section">My plans</li>
+                    <li><a class="nav-link @Active("WorkoutPlans")" asp-controller="WorkoutPlans" asp-action="Index"><i class="bi bi-clipboard2-pulse"></i> Workout plans</a></li>
+                    <li><a class="nav-link @Active("DietPlans")" asp-controller="DietPlans" asp-action="Index"><i class="bi bi-basket"></i> Diet plans</a></li>
+                    <li><a class="nav-link @Active("Appointments")" asp-controller="Appointments" asp-action="Index"><i class="bi bi-calendar-check"></i> Appointments</a></li>
+                    <li><a class="nav-link @Active("Client", "Feedback")" asp-controller="Client" asp-action="Feedback"><i class="bi bi-chat-quote"></i> Feedback</a></li>
+                }
+                @if (User.IsInRole(Roles.Trainer))
+                {
+                    <li class="nav-section">Coaching</li>
+                    <li><a class="nav-link @Active("Trainer")" asp-controller="Trainer" asp-action="Dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                    <li><a class="nav-link @Active("Appointments")" asp-controller="Appointments" asp-action="Index"><i class="bi bi-calendar-check"></i> Appointments</a></li>
+                    <li><a class="nav-link @Active("WorkoutPlans")" asp-controller="WorkoutPlans" asp-action="Index"><i class="bi bi-clipboard2-pulse"></i> Workout plans</a></li>
+                    <li><a class="nav-link @Active("DietPlans")" asp-controller="DietPlans" asp-action="Index"><i class="bi bi-basket"></i> Diet plans</a></li>
+                    <li><a class="nav-link @Active("Reports")" asp-controller="Reports" asp-action="Index"><i class="bi bi-bar-chart-line"></i> Reports</a></li>
+                }
+                @if (User.IsInRole(Roles.Admin))
+                {
+                    <li class="nav-section">Administration</li>
+                    <li><a class="nav-link @Active("Admin", "Dashboard")" asp-controller="Admin" asp-action="Dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                    <li><a class="nav-link @Active("Admin", "Users")" asp-controller="Admin" asp-action="Users"><i class="bi bi-people"></i> Users</a></li>
+                    <li><a class="nav-link @Active("Appointments")" asp-controller="Appointments" asp-action="Index" asp-route-view="all"><i class="bi bi-calendar-check"></i> Appointments</a></li>
+                    <li><a class="nav-link @Active("WorkoutPlans")" asp-controller="WorkoutPlans" asp-action="Index"><i class="bi bi-clipboard2-pulse"></i> All plans</a></li>
+                    <li><a class="nav-link @Active("Reports")" asp-controller="Reports" asp-action="Index"><i class="bi bi-bar-chart-line"></i> Reports</a></li>
+                    <li><a class="nav-link @Active("Admin", "ActivityLog")" asp-controller="Admin" asp-action="ActivityLog"><i class="bi bi-shield-check"></i> Audit log</a></li>
+                }
+                <li class="nav-section">Account</li>
+                <li><a class="nav-link @Active("Notifications")" asp-controller="Notifications" asp-action="Index"><i class="bi bi-bell"></i> Notifications</a></li>
+                <li><a class="nav-link @Active("Account", "Profile")" asp-controller="Account" asp-action="Profile"><i class="bi bi-person-gear"></i> Profile &amp; privacy</a></li>
+            </ul>
+        </nav>
+
+        <div class="main">
+            <header class="topbar">
+                <button class="btn btn-light d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Open menu">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    @await Component.InvokeAsync("NotificationBell")
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="avatar">@(displayName.Length > 0 ? displayName.Substring(0, 1).ToUpper() : "?")</span>
+                            <span class="d-none d-sm-inline text-start lh-sm">
+                                <small class="d-block text-muted">@roleLabel</small>@displayName
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="bi bi-person"></i> Profile</a></li>
+                            <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword"><i class="bi bi-key"></i> Change password</a></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <form asp-controller="Account" asp-action="Logout" method="post">
+                                    <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right"></i> Sign out</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+            <main class="content" id="main">
+                <partial name="_StatusMessages" />
+                @RenderBody()
+            </main>
+            <footer class="app-footer">&copy; @DateTime.Now.Year HealthTrack &middot; Personal Health &amp; Fitness Management &middot; <a asp-controller="Home" asp-action="Privacy">Privacy</a></footer>
+        </div>
+    </div>
+}
+else
+{
+    <nav class="navbar navbar-expand public-nav">
+        <div class="container">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index"><i class="bi bi-heart-pulse-fill"></i> HealthTrack</a>
+            <div class="ms-auto d-flex gap-2">
+                <a class="btn btn-outline-light btn-sm" asp-controller="Account" asp-action="Login">Sign in</a>
+                <a class="btn btn-light btn-sm" asp-controller="Account" asp-action="Register">Create account</a>
+            </div>
+        </div>
+    </nav>
+    <main class="public-main">
+        <div class="container"><partial name="_StatusMessages" /></div>
+        @RenderBody()
+    </main>
+}
+    <script src="~/lib/jquery/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/chartjs/chart.umd.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

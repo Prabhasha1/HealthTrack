@@ -1,0 +1,43 @@
+@model ProgressViewModel
+@* Reusable block of progress charts used by the client Progress page and the trainer's client view *@
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3"><div class="card stat-card"><span class="label">Weight change</span>
+        <div class="value @(Model.WeightChange <= 0 ? "text-success" : "text-danger")">@(Model.WeightChange.HasValue ? (Model.WeightChange > 0 ? "+" : "") + Model.WeightChange + " kg" : "–")</div>
+        <div class="hint">@(Model.StartWeight?.ToString("0.0") ?? "–") → @(Model.CurrentWeight?.ToString("0.0") ?? "–") kg</div></div></div>
+    <div class="col-6 col-lg-3"><div class="card stat-card"><span class="label">Current BMI</span>
+        <div class="value">@(Model.CurrentBmi?.ToString("0.0") ?? "–")</div>
+        <div class="hint">@if (Model.CurrentBmi.HasValue) { <span class="badge @HealthCalculator.BmiBadgeClass(Model.CurrentBmi.Value)">@Model.BmiCategory</span> }</div></div></div>
+    <div class="col-6 col-lg-3"><div class="card stat-card"><span class="label">Workouts</span>
+        <div class="value">@Model.TotalWorkouts</div><div class="hint">@Model.TotalMinutes min in total</div></div></div>
+    <div class="col-6 col-lg-3"><div class="card stat-card"><span class="label">Calories burned</span>
+        <div class="value text-accent">@Model.TotalCaloriesBurned.ToString("N0")</div><div class="hint">avg intake @Model.AverageDailyCaloriesIn kcal/day</div></div></div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-6"><div class="card"><div class="card-header">Weight (kg)</div><div class="card-body"><div class="chart-box"><canvas id="pWeight"></canvas></div></div></div></div>
+    <div class="col-lg-6"><div class="card"><div class="card-header">BMI &amp; body fat %</div><div class="card-body"><div class="chart-box"><canvas id="pBmi"></canvas></div></div></div></div>
+    <div class="col-12"><div class="card"><div class="card-header">Calories in vs. calories burned (per day)</div><div class="card-body"><div class="chart-box"><canvas id="pEnergy"></canvas></div></div></div></div>
+    <div class="col-lg-6"><div class="card"><div class="card-header">Weekly activity</div><div class="card-body"><div class="chart-box"><canvas id="pWeekly"></canvas></div></div></div></div>
+    <div class="col-lg-6"><div class="card"><div class="card-header">Resting heart rate (bpm)</div><div class="card-body"><div class="chart-box"><canvas id="pHeart"></canvas></div></div></div></div>
+</div>
+@{ string J(object o) => System.Text.Json.JsonSerializer.Serialize(o); }
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const dates = @Html.Raw(J(Model.MeasurementDates));
+    htChart('pWeight', 'line', dates, [{ label: 'Weight', data: @Html.Raw(J(Model.Weights)), borderColor: HT.teal, backgroundColor: HT.tealFill, fill: true, tension: .3 }],
+        { plugins: { legend: { display: false } } });
+    htChart('pBmi', 'line', dates, [
+        { label: 'BMI', data: @Html.Raw(J(Model.Bmis)), borderColor: HT.blue, tension: .3, yAxisID: 'y' },
+        { label: 'Body fat %', data: @Html.Raw(J(Model.BodyFat)), borderColor: HT.purple, borderDash: [5, 4], tension: .3, yAxisID: 'y1', spanGaps: true }
+    ], { scales: { x: { grid: { display: false } }, y: { position: 'left', title: { display: true, text: 'BMI' } }, y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Body fat %' } } } });
+    htChart('pEnergy', 'bar', @Html.Raw(J(Model.EnergyDates)), [
+        { label: 'Calories eaten', data: @Html.Raw(J(Model.CaloriesEatenPerDay)), backgroundColor: 'rgba(15,118,110,.55)', borderRadius: 3 },
+        { label: 'Calories burned', data: @Html.Raw(J(Model.CaloriesBurnedPerDay)), backgroundColor: HT.orange, borderRadius: 3 }
+    ]);
+    htChart('pWeekly', 'bar', @Html.Raw(J(Model.WeekLabels)), [
+        { label: 'Workouts', data: @Html.Raw(J(Model.WorkoutsPerWeek)), backgroundColor: HT.teal, borderRadius: 4, yAxisID: 'y' },
+        { label: 'Minutes', data: @Html.Raw(J(Model.MinutesPerWeek)), type: 'line', borderColor: HT.orange, tension: .3, yAxisID: 'y1' }
+    ], { scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: 'Workouts' } }, y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Minutes' } } } });
+    htChart('pHeart', 'line', dates, [{ label: 'Resting HR', data: @Html.Raw(J(Model.RestingHeartRates)), borderColor: '#dc2626', tension: .3, spanGaps: true }],
+        { plugins: { legend: { display: false } } });
+});
+</script>

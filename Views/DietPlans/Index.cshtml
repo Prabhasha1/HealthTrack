@@ -1,0 +1,36 @@
+@model List<DietPlan>
+@{ ViewData["Title"] = "Diet plans"; bool trainer = User.IsInRole(Roles.Trainer); }
+<div class="page-header">
+    <div><h1>Diet plans</h1><p class="subtitle">@(trainer ? "Diet schedules you have created." : User.IsInRole(Roles.Admin) ? "All diet plans in the system." : "Your personalised diet schedule.")</p></div>
+    @if (trainer) { <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> New diet plan</a> }
+</div>
+@if (Model.Count == 0)
+{
+    <div class="card"><div class="empty-state"><i class="bi bi-basket"></i>No diet plans yet.</div></div>
+}
+<div class="row g-4">
+@foreach (var p in Model)
+{
+    <div class="col-md-6 col-xl-4">
+        <div class="card h-100 @(p.IsActive ? "" : "opacity-75")">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge @(p.IsActive ? "bg-success" : "bg-secondary")">@(p.IsActive ? "Active" : "Inactive")</span>
+                    <small class="text-muted">from @p.StartDate.ToString("dd MMM yyyy")</small>
+                </div>
+                <h5 class="mb-1"><a asp-action="Details" asp-route-id="@p.Id" class="text-reset text-decoration-none">@p.Title</a></h5>
+                <p class="small text-muted mb-2">@(trainer ? "Client: " + p.Client?.FullName : "By " + p.Trainer?.FullName)</p>
+                <div class="d-flex gap-3">
+                    <div><div class="fw-bold fs-5">@p.DailyCalorieTarget</div><small class="text-muted">kcal target</small></div>
+                    <div><div class="fw-bold fs-5">@p.Meals.Count</div><small class="text-muted">meals/day</small></div>
+                    <div><div class="fw-bold fs-5">@p.Meals.Sum(m => m.Calories)</div><small class="text-muted">planned kcal</small></div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0 pt-0 pb-3 px-3 d-flex gap-2">
+                <a asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary">Open</a>
+                @if (trainer) { <a asp-action="Edit" asp-route-id="@p.Id" class="btn btn-sm btn-outline-secondary">Edit</a> }
+            </div>
+        </div>
+    </div>
+}
+</div>

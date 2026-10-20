@@ -1,0 +1,75 @@
+@model Appointment
+@{
+    ViewData["Title"] = "Appointment";
+    string me = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
+    bool isTrainer = Model.TrainerId == me, isClient = Model.ClientId == me;
+}
+<div class="page-header">
+    <div>
+        <a asp-action="Index" class="small"><i class="bi bi-arrow-left"></i> Appointments</a>
+        <h1>@Display.Words(Model.Type) <span class="badge fs-6 align-middle @Display.StatusBadge(Model.Status)">@Model.Status</span></h1>
+        <p class="subtitle">@Model.StartTime.ToString("dddd d MMMM yyyy, HH:mm")–@Model.EndTime.ToString("HH:mm") (@Model.DurationMinutes min)</p>
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card mb-4">
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Client</dt><dd class="col-sm-8">@Model.Client?.FullName</dd>
+                    <dt class="col-sm-4">Professional</dt><dd class="col-sm-8">@Model.Trainer?.FullName <small class="text-muted">@Model.Trainer?.Specialization</small></dd>
+                    <dt class="col-sm-4">Requested</dt><dd class="col-sm-8">@Model.CreatedAt.ToString("dd MMM yyyy HH:mm")</dd>
+                    @if (Model.UpdatedAt.HasValue) { <dt class="col-sm-4">Last updated</dt><dd class="col-sm-8">@Model.UpdatedAt.Value.ToString("dd MMM yyyy HH:mm")</dd> }
+                    <dt class="col-sm-4">Client notes</dt><dd class="col-sm-8">@(Model.ClientNotes ?? "—")</dd>
+                    <dt class="col-sm-4">Trainer notes</dt><dd class="col-sm-8 mb-0">@(Model.TrainerNotes ?? "—")</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        @if (isTrainer && Model.Status == AppointmentStatus.Pending)
+        {
+            <div class="card mb-3">
+                <div class="card-header">Respond to request</div>
+                <div class="card-body">
+                    <form method="post">
+                        <textarea name="trainerNotes" class="form-control mb-2" rows="2" maxlength="500" placeholder="Optional message to the client"></textarea>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button asp-action="Approve" asp-route-id="@Model.Id" class="btn btn-success"><i class="bi bi-check-lg"></i> Approve</button>
+                            <button asp-action="Reject" asp-route-id="@Model.Id" class="btn btn-outline-danger"><i class="bi bi-x-lg"></i> Reject</button>
+                            <a asp-action="Reschedule" asp-route-id="@Model.Id" class="btn btn-outline-primary"><i class="bi bi-clock-history"></i> Propose new time</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        }
+        @if (isTrainer && (Model.Status == AppointmentStatus.Approved || Model.Status == AppointmentStatus.Rescheduled))
+        {
+            <div class="card mb-3">
+                <div class="card-header">Manage session</div>
+                <div class="card-body">
+                    <a asp-action="Reschedule" asp-route-id="@Model.Id" class="btn btn-outline-primary mb-2"><i class="bi bi-clock-history"></i> Update time</a>
+                    @if (Model.StartTime <= DateTime.Now)
+                    {
+                        <form asp-action="Complete" asp-route-id="@Model.Id" method="post">
+                            <textarea name="trainerNotes" class="form-control mb-2" rows="2" maxlength="500" placeholder="Session summary (optional)"></textarea>
+                            <button class="btn btn-secondary"><i class="bi bi-check2-all"></i> Mark completed</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+        @if ((isTrainer || isClient) && Model.IsOpen)
+        {
+            <div class="card">
+                <div class="card-header">Cancel appointment</div>
+                <div class="card-body">
+                    <form asp-action="Cancel" asp-route-id="@Model.Id" method="post">
+                        <input name="reason" class="form-control mb-2" maxlength="200" placeholder="Reason (optional)" />
+                        <button class="btn btn-outline-danger" data-confirm="Cancel this appointment?"><i class="bi bi-calendar-x"></i> Cancel appointment</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>

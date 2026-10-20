@@ -1,0 +1,170 @@
+@model ReportsViewModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Reports";
+    var f = Model.Filter;
+    var tabs = new[] { ("performance", "Client performance", "bi-person-lines-fill"), ("routines", "Popular routines", "bi-trophy"), ("engagement", "Engagement", "bi-people") };
+    string trainerName = Model.Trainers.FirstOrDefault(t => t.Id == f.TrainerId).Name ?? (Model.IsAdmin ? "All trainers" : "My clients");
+}
+<div class="page-header">
+    <div><h1>Reports</h1><p class="subtitle">@trainerName · @f.From.ToString("dd MMM yyyy") – @f.To.ToString("dd MMM yyyy")</p></div>
+    <div class="d-flex gap-2 no-print">
+        <button onclick="window.print()" class="btn btn-outline-secondary"><i class="bi bi-printer"></i> Print</button>
+        <a asp-action="Export" asp-route-type="@Model.ReportType" asp-route-from="@f.From.ToString("yyyy-MM-dd")" asp-route-to="@f.To.ToString("yyyy-MM-dd")" asp-route-trainerId="@(Model.IsAdmin ? f.TrainerId : null)" class="btn btn-primary"><i class="bi bi-filetype-csv"></i> Export CSV</a>
+    </div>
+</div>
+
+<ul class="nav nav-pills mb-3 no-print">
+    @foreach (var (key, label, icon) in tabs)
+    {
+        <li class="nav-item"><a class="nav-link @(Model.ReportType == key ? "active" : "")" asp-route-type="@key" asp-route-from="@f.From.ToString("yyyy-MM-dd")" asp-route-to="@f.To.ToString("yyyy-MM-dd")" asp-route-trainerId="@f.TrainerId"><i class="bi @icon"></i> @label</a></li>
+    }
+</ul>
+
+<div class="card mb-4 no-print"><div class="card-body">
+    <form method="get" class="row g-2 align-items-end">
+        <input type="hidden" name="type" value="@Model.ReportType" />
+        <div class="col-auto"><label class="form-label small mb-0">From</label><input type="date" name="from" value="@f.From.ToString("yyyy-MM-dd")" class="form-control" /></div>
+        <div class="col-auto"><label class="form-label small mb-0">To</label><input type="date" name="to" value="@f.To.ToString("yyyy-MM-dd")" class="form-control" /></div>
+        @if (Model.IsAdmin)
+        {
+            <div class="col-auto"><label class="form-label small mb-0">Trainer</label>
+                <select name="trainerId" class="form-select"><option value="">All trainers</option>
+                    @foreach (var t in Model.Trainers) { <option value="@t.Id" selected="@(t.Id == f.TrainerId)">@t.Name</option> }
+                </select></div>
+        }
+        <div class="col-auto"><button class="btn btn-outline-primary"><i class="bi bi-funnel"></i> Apply</button></div>
+    </form>
+</div></div>
+
+@if (Model.ReportType == "performance")
+{
+    <div class="card mb-4">
+        <div class="card-header">Client performance</div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Client</th>@if (Model.IsAdmin) { <th>Trainer</th> }<th>Weight start → end</th><th>Change</th><th>BMI</th><th>Workouts</th><th>Minutes</th><th>kcal burned</th><th>Avg kcal in</th><th>Appts done</th><th>Adherence</th></tr></thead>
+                <tbody>
+                @if (Model.Performance.Count == 0) { <tr><td colspan="11" class="empty-state">No clients in scope.</td></tr> }
+                @foreach (var r in Model.Performance)
+                {
+                    <tr>
+                        <td><strong>@r.ClientName</strong></td>
+                        @if (Model.IsAdmin) { <td class="small">@r.TrainerName</td> }
+                        <td>@(r.StartWeight?.ToString("0.0") ?? "–") → @(r.EndWeight?.ToString("0.0") ?? "–")</td>
+                        <td class="@(r.WeightChange < 0 ? "text-success" : r.WeightChange > 0 ? "text-danger" : "")">@(r.WeightChange.HasValue ? (r.WeightChange > 0 ? "+" : "") + r.WeightChange : "–")</td>
+                        <td>@(r.CurrentBmi?.ToString("0.0") ?? "–")</td>
+                        <td>@r.Workouts</td>
+                        <td>@r.TotalMinutes</td>
+                        <td>@r.CaloriesBurned.ToString("N0")</td>
+                        <td>@r.AvgDailyCaloriesIn</td>
+                        <td>@r.AppointmentsCompleted</td>
+                        <td style="min-width:120px">
+                            @if (r.AdherencePercent.HasValue)
+                            {
+                                <div class="d-flex align-items-center gap-2"><span>@r.AdherencePercent%</span>
+                                    <div class="progress progress-thin flex-grow-1"><div class="progress-bar @(r.AdherencePercent >= 75 ? "bg-success" : r.AdherencePercent >= 50 ? "bg-warning" : "bg-danger")" style="width:@r.AdherencePercent%"></div></div></div>
+                            }
+                            else { <span class="text-muted">no plan</span> }
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @if (Model.Performance.Count > 0)
+    {
+        <div class="card"><div class="card-header">Calories burned and workouts by client</div><div class="card-body"><div class="chart-box"><canvas id="perfChart"></canvas></div></div></div>
+    }
+}
+else if (Model.ReportType == "routines")
+{
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <div class="card">
+                <div class="card-header">Most popular exercises</div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead><tr><th>#</th><th>Exercise</th><th>Times logged</th><th>Clients</th><th>Total minutes</th><th>Avg kcal</th><th>In plans</th></tr></thead>
+                        <tbody>
+                        @{ int rank = 1; }
+                        @foreach (var r in Model.PopularRoutines)
+                        {
+                            <tr><td>@(rank++)</td><td><strong>@r.ExerciseName</strong></td><td>@r.TimesLogged</td><td>@r.UniqueClients</td><td>@r.TotalMinutes</td><td>@r.AvgCaloriesBurned</td><td>@r.TimesPrescribed</td></tr>
+                        }
+                        @if (Model.PopularRoutines.Count == 0) { <tr><td colspan="7" class="empty-state">No workouts logged in this period.</td></tr> }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-4">
+            <div class="card mb-4"><div class="card-header">Top exercises</div><div class="card-body"><div class="chart-box"><canvas id="routineChart"></canvas></div></div></div>
+            <div class="card">
+                <div class="card-header">Most-followed plans</div>
+                <ul class="list-group list-group-flush">
+                    @foreach (var p in Model.PopularPlans) { <li class="list-group-item d-flex justify-content-between"><span>@p.Title</span><span class="badge bg-primary">@p.Count sessions</span></li> }
+                    @if (Model.PopularPlans.Count == 0) { <li class="list-group-item text-muted">No data.</li> }
+                </ul>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    var e = Model.Engagement;
+    int activePct = e.TotalClients == 0 ? 0 : 100 * e.ActiveClients / e.TotalClients;
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3"><div class="card stat-card"><span class="label">Active clients</span><div class="value">@e.ActiveClients <small class="fs-6 fw-normal">/ @e.TotalClients</small></div><div class="hint">@activePct% engaged</div></div></div>
+        <div class="col-6 col-lg-3"><div class="card stat-card"><span class="label">Logins</span><div class="value">@e.TotalLogins</div><div class="hint">@e.NewRegistrations new registrations</div></div></div>
+        <div class="col-6 col-lg-3"><div class="card stat-card"><span class="label">Entries logged</span><div class="value">@(e.WorkoutLogs + e.MealLogs + e.Measurements)</div><div class="hint">@e.WorkoutLogs workouts · @e.MealLogs meals · @e.Measurements measurements</div></div></div>
+        <div class="col-6 col-lg-3"><div class="card stat-card"><span class="label">Entries per active client</span><div class="value">@e.LogsPerActiveClient</div><div class="hint">@e.AppointmentsBooked appointments booked</div></div></div>
+    </div>
+    <div class="row g-4">
+        <div class="col-xl-8"><div class="card"><div class="card-header">Daily engagement</div><div class="card-body"><div class="chart-box"><canvas id="engChart"></canvas></div></div></div></div>
+        <div class="col-xl-4">
+            <div class="card">
+                <div class="card-header">Most engaged clients</div>
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Client</th><th>Entries</th><th>Last login</th></tr></thead>
+                    <tbody>
+                    @foreach (var m in e.MostEngaged) { <tr><td>@m.Name</td><td>@m.Entries</td><td class="small">@Display.Ago(m.LastLogin)</td></tr> }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+@if (Model.ReportType == "performance" && Model.Performance.Count > 0)
+{
+    <text>
+    htChart('perfChart', 'bar', @Html.Raw(JsonSerializer.Serialize(Model.Performance.Select(p => p.ClientName))), [
+        { label: 'kcal burned', data: @Html.Raw(JsonSerializer.Serialize(Model.Performance.Select(p => p.CaloriesBurned))), backgroundColor: HT.orange, borderRadius: 4, yAxisID: 'y' },
+        { label: 'Workouts', data: @Html.Raw(JsonSerializer.Serialize(Model.Performance.Select(p => p.Workouts))), backgroundColor: HT.teal, borderRadius: 4, yAxisID: 'y1' }
+    ], { scales: { x: { grid: { display: false } }, y: { beginAtZero: true, title: { display: true, text: 'kcal' } }, y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Workouts' } } } });
+    </text>
+}
+@if (Model.ReportType == "routines")
+{
+    var top = Model.PopularRoutines.Take(8).ToList();
+    <text>
+    htChart('routineChart', 'bar', @Html.Raw(JsonSerializer.Serialize(top.Select(r => r.ExerciseName))), [
+        { label: 'Times logged', data: @Html.Raw(JsonSerializer.Serialize(top.Select(r => r.TimesLogged))), backgroundColor: HT.teal, borderRadius: 4 }
+    ], { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } }, y: { grid: { display: false } } } });
+    </text>
+}
+@if (Model.ReportType == "engagement")
+{
+    <text>
+    htChart('engChart', 'line', @Html.Raw(JsonSerializer.Serialize(Model.Engagement.Dates)), [
+        { label: 'Entries', data: @Html.Raw(JsonSerializer.Serialize(Model.Engagement.EntriesPerDay)), borderColor: HT.teal, backgroundColor: HT.tealFill, fill: true, tension: .3 },
+        { label: 'Logins', data: @Html.Raw(JsonSerializer.Serialize(Model.Engagement.LoginsPerDay)), borderColor: HT.orange, tension: .3 }
+    ], { scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { precision: 0 } } } });
+    </text>
+}
+</script>
+}
